@@ -279,7 +279,7 @@ pub async fn spawn_rncp_listener(
         let link_identities = link_mgr.link_identities_handle();
         let fetch_events = events_tx.clone();
         let fetch_path_hash = truncated_hash(FETCH_PATH_NAME.as_bytes());
-        link_mgr.set_request_handler_ex(move |link_id, path_hash, data| {
+        link_mgr.set_request_handler_ex(move |link_id, path_hash, data, _remote_identity| {
             if path_hash != fetch_path_hash {
                 return RequestOutcome::Drop;
             }

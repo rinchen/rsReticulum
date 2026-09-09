@@ -455,7 +455,10 @@ pub type DestinationRequestHandler =
     Box<dyn Fn(DestinationRequest) -> RequestOutcome + Send + 'static>;
 
 type RequestHandler = Box<dyn Fn([u8; 16], [u8; 16], Vec<u8>) -> Option<Vec<u8>> + Send>;
-type RequestHandlerEx = Box<dyn Fn([u8; 16], [u8; 16], Vec<u8>) -> RequestOutcome + Send>;
+/// Extended catch-all handler: link id, path hash, request body, remote identity
+/// (when the peer identified on the Link).
+type RequestHandlerEx =
+    Box<dyn Fn([u8; 16], [u8; 16], Vec<u8>, Option<Identity>) -> RequestOutcome + Send>;
 type LinkIdentityGate = Box<dyn Fn([u8; 16], [u8; 16]) -> bool + Send>;
 type ResourceAcceptHandler = Box<dyn Fn([u8; 16], &ResourceAdvertisement) -> bool + Send>;
 
@@ -4699,7 +4702,7 @@ impl LinkManager {
                 RequestOutcome::Drop
             }
         } else if let Some(ref handler) = self.request_handler_ex {
-            handler(link_id, path_hash, data.clone())
+            handler(link_id, path_hash, data.clone(), remote_identity)
         } else if let Some(ref handler) = self.request_handler {
             match handler(link_id, path_hash, data) {
                 Some(response) => RequestOutcome::Reply(response),
@@ -4867,9 +4870,12 @@ impl LinkManager {
 
     /// Handler that may schedule a follow-up resource transfer (rncp --fetch).
     /// Takes precedence over [`Self::set_request_handler`].
+    ///
+    /// The fourth argument is the authenticated remote identity when the peer
+    /// identified on the Link (needed for NomadNet `.allowed` ACLs).
     pub fn set_request_handler_ex<F>(&mut self, handler: F)
     where
-        F: Fn([u8; 16], [u8; 16], Vec<u8>) -> RequestOutcome + Send + 'static,
+        F: Fn([u8; 16], [u8; 16], Vec<u8>, Option<Identity>) -> RequestOutcome + Send + 'static,
     {
         self.request_handler_ex = Some(Box::new(handler));
     }
