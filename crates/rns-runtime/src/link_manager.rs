@@ -7316,7 +7316,9 @@ mod tests {
         let stored = transfer.resource.metadata.as_deref().expect("metadata");
         // OutboundResource frames metadata as `length(3 BE) || msgpack`.
         assert!(
-            stored.windows(metadata.len()).any(|w| w == metadata.as_slice()),
+            stored
+                .windows(metadata.len())
+                .any(|w| w == metadata.as_slice()),
             "stored metadata should contain packed name map"
         );
         assert_eq!(
