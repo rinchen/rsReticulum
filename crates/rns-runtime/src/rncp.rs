@@ -683,13 +683,7 @@ pub async fn rncp_send_file(request: RncpSendRequest<'_>) -> Result<RncpOutcome,
 }
 
 fn pack_metadata(file_name: &str) -> Vec<u8> {
-    let entries = vec![(
-        rmpv::Value::String(rmpv::Utf8String::from("name")),
-        rmpv::Value::Binary(file_name.as_bytes().to_vec()),
-    )];
-    let mut buf = Vec::new();
-    let _ = rmpv::encode::write_value(&mut buf, &rmpv::Value::Map(entries));
-    buf
+    crate::link_manager::pack_file_name_metadata(file_name)
 }
 
 struct OutboundDrive<'a> {
